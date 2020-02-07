@@ -226,7 +226,22 @@ Celestial.display = function(config) {
       container.selectAll(".stars")
          .data(st.features)
          .enter().append("path")
-         .attr("class", "star");
+         .attr("class", "star")         
+         .each(function(d)   // After stars loaded, but before rotations, check for line collisions         
+         {    
+           // If it is within visible range (I guess?)...
+           if (clip(d.geometry.coordinates) && d.properties.mag <= cfg.stars.limit) 
+           {      
+             // #mm check if under pixel is purple
+             var pt = prjMap(d.geometry.coordinates);      
+             var curr_px = context.getImageData(pt[0], pt[1], 1, 1).data;          
+             if (curr_px[0] == 255 && curr_px[1] == 0 && curr_px[2] == 255 && curr_px[3] == 255)
+             {
+               // Set star as plucked, so it will be drawn larger (see below)
+               d.properties.plucked = true;
+             }        
+           }
+         });
     });
 
     //Deep space objects
@@ -514,32 +529,24 @@ Celestial.display = function(config) {
         });
       }
       
-    }
-
+    }        
+    
     
     if (cfg.stars.show) { 
-      setStyle(cfg.stars.style);
+      setStyle(cfg.stars.style);      
       container.selectAll(".star").each(function(d) {
         if (clip(d.geometry.coordinates) && d.properties.mag <= cfg.stars.limit) {
           //console.log(d.geometry.coordinates);
-          var pt = prjMap(d.geometry.coordinates),
-          r = starSize(d);
+          var pt = prjMap(d.geometry.coordinates);          
+
+          // Determine star radius based on whether plucked or not
+          r = d.properties.plucked ? 10 : starSize(d);
+
           //console.log(r);
           context.fillStyle = starColor(d); 
           context.beginPath();
           context.arc(pt[0], pt[1], r, 0, 2 * Math.PI);
-          context.closePath();
-          /* #mm check if under pixel is purple*/
-          var curr_px = context.getImageData(pt[0], pt[1], r, 1, 2 * Math.PI).data;
-          context.toDataURL('image/png')
-          
-          //? save getImageData to file
-          if (curr_px[0] == 255 && curr_px[1] == 0 && curr_px[2] == 255 && curr_px[3] == 255) {
-            console.log("ping@"+curr_px);
-            context.arc(pt[0], pt[1], r*10, 0, 2 * Math.PI);
-            total_pings++;
-          }
-          
+          context.closePath();          
           context.fill();
           if (cfg.stars.names && d.properties.mag <= cfg.stars.namelimit*adapt) {
             setTextStyle(cfg.stars.namestyle);
@@ -611,9 +618,7 @@ Celestial.display = function(config) {
 
     if (cfg.controls) { 
       zoomState(prjMap.scale());
-    }
-
-    console.log("total-pings:"+total_pings);
+    }    
   }
     
 
@@ -727,7 +732,7 @@ Celestial.display = function(config) {
     return name; 
   }
   
-  function starSize(d) {
+  function starSize(d) { 
     var mag = d.properties.mag;
     if (mag === null) return 0.1; 
     var r = starbase * adapt * Math.exp(starexp * (mag+2));

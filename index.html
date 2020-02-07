@@ -1,0 +1,27 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd"> 
+<html lang="en"> 
+<head>
+<meta http-equiv="Access-Control-Allow-Origin" content="*" /> 
+<meta http-equiv="content-type" content="text/html; charset=utf-8"> 
+<title>Celestial Music Box</title></head> 
+<body>
+    <p>Celestial Music Box</p>
+    <div id="update"></div>
+</body>
+<script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+<script>
+$.getJSON('stars.14.json',function(data){
+    console.log(data);
+    var output = '<ul>';  
+    $.each(data, function(key,val){
+        output += '<li>'+ key + " " + val + '</li>';
+        $.each(val.features, function(key2,val2){ 
+            
+        });
+        
+    });
+    output += '</ul>';
+    $('#update').html(output);
+});    
+</script>
+</html>

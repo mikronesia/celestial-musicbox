@@ -218,7 +218,8 @@ Celestial.display = function(config) {
     });
     
     //Stars
-    d3.json(path + cfg.stars.data, function(error, json) {
+    d3.json(path + cfg.stars.data, function(error, json) 
+    {
       if (error) return console.warn(error);
 
       var st = getData(json, trans);
@@ -234,7 +235,7 @@ Celestial.display = function(config) {
            {      
              // #mm check if under pixel is purple
              var pt = prjMap(d.geometry.coordinates);      
-             var curr_px = context.getImageData(pt[0], pt[1], 1, 1).data;          
+             var curr_px = context.getImageData(pt[0]*pixelRatio, pt[1]*pixelRatio, 1, 1).data;          
              if (curr_px[0] == 255 && curr_px[1] == 0 && curr_px[2] == 255 && curr_px[3] == 255)
              {
                // Set star as plucked, so it will be drawn larger (see below)

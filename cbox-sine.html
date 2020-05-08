@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="js/Tone.js"></script>
+</head>
+    
+<body>
+</body>
+<script>
+Array.prototype.sample = function(){
+  return this[Math.floor(Math.random()*this.length)];
+}
+
+function genRand(min, max, decimalPlaces) {  
+    var rand = Math.random()*(max-min) + min;
+    var power = Math.pow(10, decimalPlaces);
+    return Math.floor(rand*power) / power;
+}
+
+function proportion(value,max,minrange,maxrange) {
+    return Math.round(((max-value)/(max))*(maxrange-minrange))+minrange;
+}
+
+//var chorus = new Tone.Chorus(4, 2.5, 0.5);
+//synth.connect(chorus);
+
+var synth = new Tone.PolySynth(4, Tone.Synth, {
+"volume":-6,
+"oscillator": {
+      "type": "sine"
+  },
+  "filter": {
+      "Q": 2,
+      "type": "lowpass",
+      "rolloff": -96
+  },
+  "envelope": {
+      "attack": 0.5,
+      "decay": 0.6,
+      "sustain": 0,
+      "release": 14
+  },
+  "filterEnvelope": {
+      "attack": 0.05,
+      "decay": 0.32,
+      "sustain": 0,
+      "release": 3,
+      "baseFrequency": 700,
+      "octaves": 2.3
+  }
+}).toMaster();
+
+//synth.set("detune", 1200)
+
+var autoPanner = new Tone.AutoPanner("8n").start();
+synth.connect(autoPanner);
+
+var pingPong = new Tone.PingPongDelay("16n", 0.5);
+synth.connect(pingPong);
+
+var limiter = new Tone.Limiter(-6).toMaster();
+synth.connect(pingPong);
+
+var convolver = new Tone.Convolver("star.wav").toMaster();
+convolver.normalize = true;
+synth.connect(convolver);
+
+
+penta_scale = [17.01, //0
+              19.09, //1
+              22.70, //2
+              25.48, //3
+              34.02, //4
+              38.18, //5
+              45.41, //6
+              57.21, //7
+              68.04, //8
+              76.37, //9
+              90.82, //10
+              101.94, //11
+              114.42, //12
+              136.07, //13
+              152.74, //14
+              181.63, //15
+              203.88, //16
+              228.84, //17
+              272.14, //18
+              305.47, //19
+              363.27, //20
+              407.75, //21
+              457.69, //22
+              544.29, //23
+              610.94, //24
+              726.74, //25
+              815.51]; //26
+
+function makeStarNote() {
+  var rand_mag = genRand(0,5,2);
+  console.log(rand_mag+'[mag]');
+  var rand_inx = proportion(rand_mag,5,11,22);
+  var rand_freq = penta_scale[rand_inx];
+  synth.triggerAttackRelease(rand_freq, "8n");
+  console.log(rand_freq+'[freq]');
+}
+
+makeStarNote();
+
+setInterval(function(){ 
+  makeStarNote();
+}, 16000);
+
+setInterval(function(){ 
+  makeStarNote();
+}, 8000);
+
+
+</script>
+</html>
+

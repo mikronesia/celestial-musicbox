@@ -1,27 +1,237 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd"> 
-<html lang="en"> 
+<!DOCTYPE html>
+<html>
 <head>
-<meta http-equiv="Access-Control-Allow-Origin" content="*" /> 
-<meta http-equiv="content-type" content="text/html; charset=utf-8"> 
-<title>Celestial Music Box</title></head> 
-<body>
-    <p>Celestial Music Box</p>
-    <div id="update"></div>
-</body>
-<script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+	<meta charset="UTF-8">
+	<title>Celestial Musicbox</title>
+	<!--
+		VirtualSky <canvas> application
+		(c) 2010 Stuart Lowe (Las Cumbras Observatory Global Telescope)
+	-->
+	<style>
+	body {
+		font-family: 'Courier New';
+		background-color: #000407;
+		color:#3E4462;
+		margin: 0px;
+		padding: 0px;
+	}
+	#bgholder {
+		position: absolute; 
+		left: 0px;
+		right: 0px;
+		top: 0px;
+		height: 400px;
+		width: 100%;
+	}
+	#bg { 
+		width: 100%;
+		height: 100%;
+	}
+	#starmap1 {
+		margin-left:auto;
+		margin-right:auto;
+	}
+	.content {
+		max-width:940px;
+		position: relative;
+		padding: 2em;
+		background-color: 000407;
+		margin-top: 100px;
+	}
+	ol {
+		margin: 0px;
+		padding: 0px;
+		counter-reset: li; /* Initiate a counter */
+		list-style: none; /* Remove default numbering */
+		*list-style: decimal; /* Keep using default numbering for IE6/7 */
+	}
+	ol li.example:before{
+		content: "Example " counter(li) ": ";
+		counter-increment: li;
+		font-size: 1.5em;
+		line-height: 2em;
+		text-align: left;
+		font-weight: bold;
+		display: block;
+	}
+	li.example { margin-bottom: 4em; }
+	.planetarium { max-width: 100%; height: 0; margin-left:auto; margin-right:auto;}
+	h2 { margin-top: 3em; padding-top: 3em; border-top: 1px solid #999; }
+	.hljs { background: #111111; padding: 1em; display:block; overflow-x:auto; margin: 1em auto; background:#111; tab-size: 4; -moz-tab-size: 4; }
+	.hljs a { color: inherit; }
+	.hljs, .hljs-subst { color:#fff; }
+	.hljs-name, .hljs-tag { color: #89bdff; }
+	.hljs-string { color: #65B042; }
+	.hljs-meta, .hljs-symbol, .hljs-template-tag, .hljs-template-variable, .hljs-addition { color:#0DBC37; }
+	.hljs-comment, .hljs-quote {color:#aaa; }
+	.hljs-number, .hljs-built_in { color: #3387CC; }
+	.hljs-regexp, .hljs-literal, .hljs-bullet, .hljs-link { color:#31a354; }
+	.hljs-deletion, .hljs-variable { color:#88f; }
+	.hljs-selector-tag, .hljs-title, .hljs-section, .hljs-doctag, .hljs-type, .hljs-selector-id, .hljs-selector-class, .hljs-strong { color:#2254F4; }
+	.hljs-keyword { color: #E28964; }
+	.hljs-emphasis { font-style:italic; }
+	.hljs-attribute { color:#D73058; }
+	.hljs-attr { color: #bdb76b; } 
+	</style>
+	<!--<script src="extra/highlight.pack.js" type="text/javascript"></script>-->
+</head>
+    <body>
+		<div id="starmap1" style="width:1440px;height:610px;"></div>
+		<h1 style="margin-left:25%;margin-right:25%;">CELESTIAL MUSIC BOX</h1>
+    </body>
+<script src="https://slowe.github.io/stuquery/js/stuquery.js"></script>
+<script language="javascript" type="text/javascript" src="virtualsky.js"></script>
+<script src="js/Tone.js"></script>
 <script>
-$.getJSON('stars.14.json',function(data){
-    console.log(data);
-    var output = '<ul>';  
-    $.each(data, function(key,val){
-        output += '<li>'+ key + " " + val + '</li>';
-        $.each(val.features, function(key2,val2){ 
-            
-        });
-        
-    });
-    output += '</ul>';
-    $('#update').html(output);
-});    
+var planetarium1;
+var star_arr;
+var star_inx;
+
+Array.prototype.sample = function(){
+  return this[Math.floor(Math.random()*this.length)];
+}
+
+function genRand(min, max, decimalPlaces) {  
+    var rand = Math.random()*(max-min) + min;
+    var power = Math.pow(10, decimalPlaces);
+    return Math.floor(rand*power) / power;
+}
+
+function proportion(value,max,minrange,maxrange) {
+    return Math.round(((max-value)/(max))*(maxrange-minrange))+minrange;
+}
+
+function convertRange( value, r1, r2 ) { 
+    return ( value - r1[ 0 ] ) * ( r2[ 1 ] - r2[ 0 ] ) / ( r1[ 1 ] - r1[ 0 ] ) + r2[ 0 ];
+}
+
+function makeStarNote() {
+  console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~');
+  star_id = star_arr[star_inx][0];
+  star_mag = star_arr[star_inx][1];
+  star_x = star_arr[star_inx][2];
+  star_y = star_arr[star_inx][3];
+  console.log('[id]'+star_id);
+  console.log('[mag]'+star_mag);
+  console.log('[x]'+star_x);
+  console.log('[y]'+star_y);
+  var rand_inx = convertRange(star_y, [ -1.46, 1.21 ], [ 11, 22 ] );
+  rand_inx = Math.round(rand_inx);
+  console.log('[inx]'+rand_inx);
+  var rand_freq = penta_scale[rand_inx];
+  console.log('[freq]'+rand_freq);
+  panner.setPosition(star_x,star_y,star_x-star_y);
+  synth.triggerAttackRelease(rand_freq, "8n");
+}
+
+var synth = new Tone.PolySynth(4, Tone.Synth, {
+	"volume":-20,
+	"oscillator": {
+		"type": "sine"
+	},
+	"filter": {
+		"Q": 2,
+		"type": "lowpass",
+		"rolloff": -96
+	},
+	"envelope": {
+		"attack": 0.5,
+		"decay": 0.6,
+		"sustain": 0,
+		"release": 14
+	},
+	"filterEnvelope": {
+		"attack": 0.05,
+		"decay": 0.32,
+		"sustain": 0,
+		"release": 3,
+		"baseFrequency": 700,
+		"octaves": 2.3
+	}
+}).toMaster();
+
+var panner = new Tone.Panner3D(0).toMaster();
+
+S(document).ready(function() {
+	var planetarium1 = S.virtualsky({
+			id: 'starmap1',
+			projection: 'lambert',
+			constellations: true,
+			keyboard: false,
+			live: true,
+			scalestars: 2,
+			gridlines_az: true,
+			latitude: 34.4326, 
+			longitude: -119.86286
+	});
+
+	star_inx = 0;
+
+	star_arr = planetarium1.stars.sort(); // get array of visible stars
+	star_arr = star_arr.sort(function(a, b) { // sort array by azimuth
+		return a[1] - b[1];
+	});
+	console.log(star_arr);
+
+	synth.connect(panner);
+
+	var feedbackDelay = new Tone.FeedbackDelay("1n", 0.25).toMaster();
+	synth.connect(feedbackDelay);
+	
+	var limiter = new Tone.Limiter(-6).toMaster();
+	synth.connect(limiter);
+
+	var convolver = new Tone.Convolver("star.wav").toMaster();
+	convolver.normalize = true;
+	synth.connect(convolver);
+
+	
+	penta_scale = [17.01, //0
+              19.09, //1
+              22.70, //2
+              25.48, //3
+              34.02, //4
+              38.18, //5
+              45.41, //6
+              57.21, //7
+              68.04, //8
+              76.37, //9
+              90.82, //10
+              101.94, //11*
+              114.42, //12*
+              136.07, //13*
+              152.74, //14*
+              181.63, //15*
+              203.88, //16*
+              228.84, //17*
+              272.14, //18*
+              305.47, //19*
+              363.27, //20*
+              407.75, //21*
+              457.69, //22*
+              544.29, //23
+              610.94, //24
+              726.74, //25
+              815.51]; //26
+
+	makeStarNote();
+
+	setInterval(function(){
+		star_inx++;
+		makeStarNote();
+	}, 16000);
+
+	setInterval(function(){ 
+		star_inx++;
+		makeStarNote();
+	}, 8000);
+
+	setInterval(function(){ 
+		star_inx++;
+		makeStarNote();
+	}, 12000);
+
+});
+
 </script>
 </html>

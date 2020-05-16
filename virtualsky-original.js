@@ -2619,19 +2619,7 @@
 					if(atmos) d *= Math.exp(-(90-p.el)*0.01);
 					d *= f;
 					c.moveTo(p.x+d,p.y);
-					// if(this.showstars) c.arc(p.x,p.y,d,0,Math.PI*2,true); #mm - original line
-					if (this.showstars) {
-						//console.log("highlightStar:"+highlightStar);
-						if (this.stars[i][0] == highlightStar) {
-							// Draw in a special way (bigger size, change color, etc)
-							console.log("special draw star");
-							c.arc(p.x,p.y,d*8,0,Math.PI*2,true); // draw star special size (x7 bigger)
-						}
-						else {
-							// Draw in the normal way
-							c.arc(p.x,p.y,d,0,Math.PI*2,true);
-						}
-					}
+					if(this.showstars) c.arc(p.x,p.y,d,0,Math.PI*2,true);
 					if(this.showstarlabels && this.starnames[this.stars[i][0]]) this.drawLabel(p.x,p.y,d,"",this.htmlDecode(this.starnames[this.stars[i][0]]));
 				}
 			}	
